@@ -47,12 +47,55 @@ server.get('/api/bears/:id', (req, res) => {
   const id = req.params.id;
 
   Bear.findById(id).then(bear => {
-    res.status(200).json(bear);
+    if (bear) {
+      res.status(200).json(bear);
+    } else {
+      res.status(404).json({ message: "The Bear with the specified ID does not exist." });
+    }
   }).catch(error => {
-    res.status(500).json({ error: 'The bear information could not be retrieved.'})
+    res.status(500).json({ error: 'The bear information could not be retrieved.'});
   }) 
 });
 
+server.delete('/api/bears/:id', (req, res) => {
+  const id = req.params.id;
+
+  Bear.findByIdAndRemove(id)
+    .then(bear => {
+      if (bear) {
+        res.status(200).json(bear);
+      } else {
+        res.status(404).json({ message: "The Bear with the specified ID does not exist." });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ error: "The Bear could not be removed" });
+    })
+})
+
+
+server.put('/api/bears/:id', (req, res) => {
+  const id = req.params.id;
+  const bearInformation = req.body;
+  const {species, latinName} = req.body;
+
+  if (species && latinName) {
+    Bear.findByIdAndUpdate(id, bearInformation)
+      .then(updatedBear => {
+        if (updatedBear) {
+          res.status(200).json(updatedBear);
+        } else {
+          res.status(404).json({ message: "The Bear with the specified ID does not exist." });
+        }
+      })
+      .catch(error => {
+        res.status(500).json({ error: "The Bear information could not be modified." });
+      })
+  } else {
+    res.status(500).json({ errorMessage: "Please provide both species and latinName for the Bear."})
+  }
+
+})
 mongoose.connect('mongodb://localhost/BearKeeper')
   .then(db => {
     console.log(`Succesfully connected to the ${db.connections[0].name} database`)
